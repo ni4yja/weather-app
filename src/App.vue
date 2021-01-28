@@ -1,5 +1,5 @@
 <template>
-  <div id="app" :class="typeof weather.main != 'undefined' && weather.main.temp < 0 ? 'cold' : ''">
+  <div id="app" :class="typeof weather.city != 'undefined' && weather.list[0].main.temp < 0 ? 'cold' : ''">
     <div class="app-wrap">
       <div class="search-box">
         <input 
@@ -9,17 +9,26 @@
           @keypress="fetchWeather"
         >
       </div>
-      <div class="info-wrap" v-if="typeof weather.main != 'undefined'">
+      <div class="info-wrap" v-if="typeof weather.city != 'undefined'">
         <div class="info-box">
           <p class="date">{{ dateBuilder() }}</p>
-          <h3 class="location">{{ weather.name }}, {{ weather.sys.country }}</h3>
+          <h3 class="location">{{ weather.city.name }}, {{ weather.city.country }}</h3>
         </div>
         <div class="weather-box">
-          <p class="temperature">{{ Math.round(weather.main.temp) }}°C</p>
-          <i class="wi wi-cloudy" v-if="typeof weather.main != 'undefined' && weather.weather[0].main == 'Clouds'"></i>
-          <i class="wi wi-rain" v-if="typeof weather.main != 'undefined' && weather.weather[0].main == 'Rain'"></i>
-          <i class="wi wi-snow" v-if="typeof weather.main != 'undefined' && weather.weather[0].main == 'Snow'"></i>
-          <p class="details">{{ weather.weather[0].main }}</p>
+          <p class="temperature">{{ Math.round(weather.list[0].main.temp) }}°C</p>
+          <i class="wi wi-day-sunny" v-if="typeof weather.city != 'undefined' && weather.list[0].weather[0].main == 'Clear'"></i>
+          <i class="wi wi-cloudy" v-if="typeof weather.city != 'undefined' && weather.list[0].weather[0].main == 'Clouds'"></i>
+          <i class="wi wi-rain" v-if="typeof weather.city != 'undefined' && weather.list[0].weather[0].main == 'Rain'"></i>
+          <i class="wi wi-snow" v-if="typeof weather.city != 'undefined' && weather.list[0].weather[0].main == 'Snow'"></i>
+          <p class="details">{{ weather.list[0].weather[0].main }}</p>
+        </div>
+        <div class="forecast-box">
+          <div v-for="(icon, index) in forecastIcons" :key="index + 1">
+            <p>{{ forecastDays[index] }}</p>
+            <p>{{ forecastWeather[index] }}°C</p>
+            <p><img :src="'http://openweathermap.org/img/w/' + icon + '.png' "  /></p>
+            <p>{{ forecastDetails[index] }}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -27,7 +36,7 @@
 </template>
 
 <script>
-
+import moment from 'moment';
 export default {
   name: 'App',
   data() {
@@ -38,10 +47,40 @@ export default {
       weather: {}
     }
   },
+  computed: {
+    forecastDays() {
+      let days = [];
+      for (let i = 1; i <= 4; i++) {
+        days.push(moment().add(i,'days').format("ddd"));
+      }
+      return days;
+    },
+    forecastWeather() {
+      let temperature = [];
+      for (let i = 1; i <= 4; i++) {
+        temperature.push(Math.round(this.weather.list[i].main.temp));
+      }
+      return temperature;
+    },
+    forecastIcons() {
+      let icons = [];
+      for (let i = 1; i <= 4; i++) {
+        icons.push(this.weather.list[i].weather[0].icon);
+      }
+      return icons;
+    },
+    forecastDetails() {
+      let details = [];
+      for (let i = 1; i <= 4; i++) {
+        details.push(this.weather.list[i].weather[0].main);
+      }
+      return details;
+    }
+  },
   methods: {
     fetchWeather (e) {
       if (e.key == "Enter") {
-        fetch(`${this.url_base}weather?q=${this.query}&units=metric&APPID=${this.api_key}`)
+        fetch(`${this.url_base}forecast?q=${this.query}&units=metric&APPID=${this.api_key}&cnt=5`)
           .then(res => {
             return res.json();
           }).then(this.setResults);
@@ -67,6 +106,11 @@ export default {
 </script>
 
 <style lang="scss">
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;400;900&display=swap');
+
+$main-bg: #22264b;
+$main-text: #e8edf3;
+$highlight: #e6cf8b;
 
 * {
   margin: 0;
@@ -74,13 +118,15 @@ export default {
   box-sizing: border-box;
 }
 
-.wi {
-  font-size: 2rem;
-  color: gray;
+body {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
 }
 
-body {
-  font-family: 'montserrat', sans-serif;
+.wi {
+  font-size: 5rem;
+  margin-bottom: .8rem;
+  color: $highlight;
 }
 
 @font-face {
@@ -104,11 +150,12 @@ body {
 }
 
 .app-wrap {
-  width: 300px;
-  height: 500px;
-  padding: 20px;
-  border-radius: 20px;
-  background: rgba(0, 0, 0, 0.3);
+  width: 21rem;
+  min-height: 35rem;
+  padding: 2rem;
+  border-radius: .2rem;
+  background: $main-bg;
+  transition: 0.4s;
 }
 
 .search-box {
@@ -126,46 +173,60 @@ body {
     background-color: rgba(255, 255, 255, .5);
     border-radius: 16px 0px 16px 0px;
     font-size: 1rem;
+    color: $main-bg;
   }
 }
 
 .info-box {
   text-align: center;
-  margin-bottom: 50px;
+  margin-bottom: 2rem;
 
   .date {
-    font-size: 1.2rem;
-    color: #fff;
-    margin-bottom: 10px;
+    font-weight: 100;
+    font-size: 1.3rem;
+    color: $main-text;
+    margin-bottom: 1rem;
   }
 
   .location {
-    font-size: 2rem;
-    color: #fff;
-    font-weight: 400;
+    font-weight: 100;
+    font-size: 2.2rem;
+    color: $main-text;
   }
 }
 
 .weather-box {
-  width: 150px;
-  height: 150px;
-  margin: 0 auto;
-  padding: 10px;
-  border: 1px solid gray;
+  width: 200px;
+  margin: 0 auto 50px;
+  padding: 1rem;
   text-align: center;
-  background-color: rgba(255, 255, 255, .5);
-  box-shadow: 0px 0px 8px rgba(0, 0, 0, .5);
 
   .temperature {
     font-size: 3rem;
-    font-weight: bold;
-    color: gray;
-    margin-bottom: 15px;
+    font-weight: 900;
+    color: $highlight;
   }
 
   .details {
     font-size: 1.8rem;
-    color: gray;
+    color: $highlight;
+  }
+}
+
+.forecast-box {
+  display: flex;
+  justify-content: space-around;
+
+  p {
+    text-align: center;
+    color: $main-text;
+    font-weight: 400;
+
+    &:first-child {
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
   }
 }
 </style>
