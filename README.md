@@ -20,6 +20,9 @@ by Sven Pieren
 ![For cold temperature](https://images.unsplash.com/photo-1447110247212-4b3cd4e0881a?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80)
 by Trevor Wilson
 
+Live demo on my [Github Pages](https://ni4yja.github.io/weather-app/)
+======================================================================
+
 ## Project setup
 ```
 npm install
