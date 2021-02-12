@@ -16,17 +16,17 @@
         </div>
         <div class="weather-box">
           <p class="temperature">{{ Math.round(weather.list[0].main.temp) }}°C</p>
-          <i class="wi wi-day-sunny" v-if="typeof weather.city != 'undefined' && weather.list[0].weather[0].main == 'Clear'"></i>
-          <i class="wi wi-cloudy" v-if="typeof weather.city != 'undefined' && weather.list[0].weather[0].main == 'Clouds'"></i>
-          <i class="wi wi-rain" v-if="typeof weather.city != 'undefined' && weather.list[0].weather[0].main == 'Rain'"></i>
-          <i class="wi wi-snow" v-if="typeof weather.city != 'undefined' && weather.list[0].weather[0].main == 'Snow'"></i>
+          <i class="wi wi-day-sunny" v-if="weather.list[0].weather[0].main == 'Clear'"></i>
+          <i class="wi wi-cloudy" v-if="weather.list[0].weather[0].main == 'Clouds'"></i>
+          <i class="wi wi-rain" v-if="weather.list[0].weather[0].main == 'Rain'"></i>
+          <i class="wi wi-snow" v-if="weather.list[0].weather[0].main == 'Snow'"></i>
           <p class="details">{{ weather.list[0].weather[0].main }}</p>
         </div>
         <div class="forecast-box">
-          <div v-for="(icon, index) in forecastIcons" :key="index + 1">
+          <div v-for="(image, index) in forecastImages" :key="index">
             <p>{{ forecastDays[index] }}</p>
             <p>{{ forecastWeather[index] }}°C</p>
-            <p><img :src="'http://openweathermap.org/img/w/' + icon + '.png' "  /></p>
+            <p><img :src="'http://openweathermap.org/img/w/' + image + '.png'"/></p>
             <p>{{ forecastDetails[index] }}</p>
           </div>
         </div>
@@ -47,6 +47,21 @@ export default {
       weather: {}
     }
   },
+  created() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          fetch(`${this.url_base}forecast?lat=${position.coords.latitude}&lon=${position.coords.longitude}&units=metric&APPID=${this.api_key}&cnt=5`)
+            .then(res => {
+              return res.json();
+            }).then(this.setResults);
+        }
+      );
+    }
+    else{
+      console.log("Your browser does not support geolocation API")
+    }
+  },
   computed: {
     forecastDays() {
       let days = [];
@@ -62,12 +77,12 @@ export default {
       }
       return temperature;
     },
-    forecastIcons() {
-      let icons = [];
+    forecastImages() {
+      let images = [];
       for (let i = 1; i <= 4; i++) {
-        icons.push(this.weather.list[i].weather[0].icon);
+        images.push(this.weather.list[i].weather[0].icon);
       }
-      return icons;
+      return images;
     },
     forecastDetails() {
       let details = [];
@@ -90,16 +105,8 @@ export default {
       this.weather = results;
     },
     dateBuilder () {
-      let d = new Date();
-      let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-      let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      
-      let day = days[d.getDay()];
-      let date = d.getDate();
-      let month = months[d.getMonth()];
-      let year = d.getFullYear();
-      
-      return `${day} ${date} ${month} ${year}`;
+      let date = moment().format('MMMM Do YYYY');
+      return date;
     }
   }
 }
