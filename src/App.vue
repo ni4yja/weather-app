@@ -1,33 +1,37 @@
 <template>
-  <div id="app" :class="typeof weather.city != 'undefined' && weather.list[0].main.temp < 0 ? 'cold' : ''">
-    <div class="app-wrap">
-      <div class="search-box">
-        <input 
-          type="text"
-          class="search-input"
-          v-model="query"
-          @keypress="fetchWeather"
-        >
-      </div>
-      <div class="info-wrap" v-if="typeof weather.city != 'undefined'">
-        <div class="info-box">
-          <p class="date">{{ dateBuilder() }}</p>
-          <h3 class="location">{{ weather.city.name }}, {{ weather.city.country }}</h3>
-        </div>
-        <div class="weather-box">
-          <p class="temperature">{{ Math.round(weather.list[0].main.temp) }}°C</p>
-          <i class="wi wi-day-sunny" v-if="weather.list[0].weather[0].main == 'Clear'"></i>
-          <i class="wi wi-cloudy" v-if="weather.list[0].weather[0].main == 'Clouds'"></i>
-          <i class="wi wi-rain" v-if="weather.list[0].weather[0].main == 'Rain'"></i>
-          <i class="wi wi-snow" v-if="weather.list[0].weather[0].main == 'Snow'"></i>
-          <p class="details">{{ weather.list[0].weather[0].main }}</p>
-        </div>
-        <div class="forecast-box">
-          <div v-for="(image, index) in forecastImages" :key="index">
-            <p>{{ forecastDays[index] }}</p>
-            <p>{{ forecastWeather[index] }}°C</p>
-            <p><img :src="'http://openweathermap.org/img/w/' + image + '.png'"/></p>
-            <p>{{ forecastDetails[index] }}</p>
+  <div v-if="isDone">
+    <div v-bind:class="[isCold ? 'cold' : '']">
+      <div id="app" v-if="isDone" v-bind:class="[isCold ? 'cold' : '']">
+        <div class="app-wrap">
+          <div class="search-box">
+            <input 
+              type="text"
+              class="search-input"
+              v-model="query"
+              @keypress="fetchWeather"
+            >
+          </div>
+          <div class="info-wrap" v-if="typeof weather.city != 'undefined'">
+            <div class="info-box">
+              <p class="date">{{ dateBuilder() }}</p>
+              <h3 class="location">{{ weather.city.name }}, {{ weather.city.country }}</h3>
+            </div>
+            <div class="weather-box">
+              <p class="temperature">{{ Math.round(weather.list[0].main.temp) }}°C</p>
+              <i class="wi wi-day-sunny" v-if="weather.list[0].weather[0].main == 'Clear'"></i>
+              <i class="wi wi-cloudy" v-if="weather.list[0].weather[0].main == 'Clouds'"></i>
+              <i class="wi wi-rain" v-if="weather.list[0].weather[0].main == 'Rain'"></i>
+              <i class="wi wi-snow" v-if="weather.list[0].weather[0].main == 'Snow'"></i>
+              <p class="details">{{ weather.list[0].weather[0].main }}</p>
+            </div>
+            <div class="forecast-box">
+              <div v-for="(image, index) in forecastImages" :key="index">
+                <p>{{ forecastDays[index] }}</p>
+                <p>{{ forecastWeather[index] }}°C</p>
+                <p><img :src="'http://openweathermap.org/img/w/' + image + '.png'"/></p>
+                <p>{{ forecastDetails[index] }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -44,7 +48,9 @@ export default {
       api_key: process.env.VUE_APP_API_KEY,
       url_base: process.env.VUE_APP_API_URL,
       query: '',
-      weather: {}
+      weather: {},
+      isDone: false,
+      isCold: false
     }
   },
   created() {
@@ -103,6 +109,8 @@ export default {
     },
     setResults (results) {
       this.weather = results;
+      this.isCold = this.weather.list[0].main.temp < 0 ? true : false 
+      this.isDone = true
     },
     dateBuilder () {
       let date = moment().format('MMMM Do YYYY');
