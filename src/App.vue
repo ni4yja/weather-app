@@ -1,14 +1,14 @@
 <template>
   <div v-if="isDone">
-    <div v-bind:class="[isCold ? 'cold' : '']">
-      <div id="app" v-if="isDone" v-bind:class="[isCold ? 'cold' : '']">
+    <div :class="{cold: isCold}">
+      <div id="app" :class="[isCold ? 'cold' : '']">
         <div class="app-wrap">
           <div class="search-box">
             <input 
               type="text"
               class="search-input"
               v-model="query"
-              @keypress="fetchWeather"
+              @keypress.enter="fetchWeather"
             >
           </div>
           <div class="info-wrap" v-if="typeof weather.city != 'undefined'">
@@ -18,17 +18,17 @@
             </div>
             <div class="weather-box">
               <p class="temperature">{{ Math.round(weather.list[0].main.temp) }}°C</p>
-              <i class="wi wi-day-sunny" v-if="weather.list[0].weather[0].main == 'Clear'"></i>
-              <i class="wi wi-cloudy" v-if="weather.list[0].weather[0].main == 'Clouds'"></i>
-              <i class="wi wi-rain" v-if="weather.list[0].weather[0].main == 'Rain'"></i>
-              <i class="wi wi-snow" v-if="weather.list[0].weather[0].main == 'Snow'"></i>
-              <p class="details">{{ weather.list[0].weather[0].main }}</p>
+              <i class="wi wi-day-sunny" v-if="getCurrent === weatherStatuses.Clear"></i>
+              <i class="wi wi-cloudy" v-if="getCurrent === weatherStatuses.Clouds"></i>
+              <i class="wi wi-rain"  v-if="getCurrent === weatherStatuses.Rain"></i>
+              <i class="wi wi-snow"  v-if="getCurrent === weatherStatuses.Snow"></i>
+              <p class="details">{{ getCurrent }}</p>
             </div>
             <div class="forecast-box">
               <div v-for="(image, index) in forecastImages" :key="index">
                 <p>{{ forecastDays[index] }}</p>
                 <p>{{ forecastWeather[index] }}°C</p>
-                <p><img :src="'http://openweathermap.org/img/w/' + image + '.png'"/></p>
+                <p><img :src="getUrl[index]"/></p>
                 <p>{{ forecastDetails[index] }}</p>
               </div>
             </div>
@@ -49,6 +49,7 @@ export default {
       url_base: process.env.VUE_APP_API_URL,
       query: '',
       weather: {},
+      forecastCount: 4,
       isDone: false,
       isCold: false
     }
@@ -69,48 +70,68 @@ export default {
     }
   },
   computed: {
+    getCurrent() {
+      let detail = this.weather.list[0].weather[0].main;
+      return detail;
+    },
+    weatherStatuses() {
+      let status = {
+        Clear: 'Clear',
+        Clouds: 'Clouds',
+        Rain: 'Rain',
+        Snow: 'Snow'
+      }
+
+      return status;
+    },
     forecastDays() {
       let days = [];
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 1; i <= this.forecastCount; i++) {
         days.push(moment().add(i,'days').format("ddd"));
       }
       return days;
     },
     forecastWeather() {
       let temperature = [];
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 1; i <= this.forecastCount; i++) {
         temperature.push(Math.round(this.weather.list[i].main.temp));
       }
       return temperature;
     },
     forecastImages() {
       let images = [];
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 1; i <= this.forecastCount; i++) {
         images.push(this.weather.list[i].weather[0].icon);
+
       }
       return images;
     },
+    getUrl() {
+      let url = [];
+      for (let i = 0; i < this.forecastImages.length; i++) {
+       url.push('http://openweathermap.org/img/w/' + this.forecastImages[i] + '.png');
+      }
+      return url;
+    },
     forecastDetails() {
       let details = [];
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 1; i <= this.forecastCount; i++) {
         details.push(this.weather.list[i].weather[0].main);
       }
       return details;
     }
   },
   methods: {
-    fetchWeather (e) {
-      if (e.key == "Enter") {
-        fetch(`${this.url_base}forecast?q=${this.query}&units=metric&APPID=${this.api_key}&cnt=5`)
-          .then(res => {
-            return res.json();
-          }).then(this.setResults);
-      }
+    fetchWeather () {
+      fetch(`${this.url_base}forecast?q=${this.query}&units=metric&APPID=${this.api_key}&cnt=5`)
+        .then(res => {
+          return res.json();
+        }).then(this.setResults);
     },
     setResults (results) {
       this.weather = results;
-      this.isCold = this.weather.list[0].main.temp < 0 ? true : false 
-      this.isDone = true
+      this.isCold = this.weather.list[0].main.temp < 0 ? true : false;
+      this.isDone = true;
     },
     dateBuilder () {
       let date = moment().format('MMMM Do YYYY');
