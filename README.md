@@ -14,6 +14,8 @@ Weather App made on Vue thanks to **WWCode Kyiv Mentoring Program**. It is a pag
 - [Weather Icons](https://erikflowers.github.io/weather-icons/) font
 - Images from Unsplash
 
+Read my [article on Medium](https://ni4yja.medium.com/weather-app-on-vue-js-1062d52af624) about the project.
+
 ![For warm temperature](https://images.unsplash.com/photo-1604223190433-2a5cc5044fda?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80)
 by Sven Pieren
 
